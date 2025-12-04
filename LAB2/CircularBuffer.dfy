@@ -7,7 +7,14 @@ class CircularMemory
   var write_position : int;
   var isFlipped : bool;
 
-  constructor Init(cap : int) {...}
+  constructor Init(cap : int) 
+    requires cap > 0
+    requires cap <= MAX_INT
+  {
+    cells := new int[cap];
+    read_position, write_position := 0, 0;
+    isFlipped := false;
+  }
   predicate Valid() {...}
 
   method Read() returns (isSuccess : bool, content : int)
