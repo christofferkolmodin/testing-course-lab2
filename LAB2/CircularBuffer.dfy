@@ -34,7 +34,7 @@ class CircularMemory
     reads this
   {
     // This condition indicates the read pointer has read all available data and "caught up" to the writer
-    read_position == write_position && !isFlipped
+    ((read_position == write_position) && !isFlipped)
   }
 
   // A predicate indicating no more Write should be allowed
@@ -43,7 +43,7 @@ class CircularMemory
   {
     // This condition indicates that the write pointer is about to "lap" the reader pointer
     // and no further writing should be allowed to prevent loss of data
-    read_position == write_position && isFlipped
+    ((read_position == write_position) && isFlipped)
   }
 
   method Read() returns (isSuccess : bool, content : int)
@@ -69,7 +69,7 @@ class CircularMemory
 
   {
     // The case when there is no data to read
-    if read_position == write_position && !isFlipped
+    if ((read_position == write_position) && !isFlipped)
     {
       isSuccess := false;
       content := 0;
@@ -119,7 +119,7 @@ class CircularMemory
     ensures read_position == old(read_position)
   {
     // The case when the buffer is full and writing would overwrite existing data
-    if read_position == write_position && isFlipped
+    if ((read_position == write_position) && isFlipped)
     {
       isSuccess := false;
     }
