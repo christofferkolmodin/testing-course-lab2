@@ -23,7 +23,10 @@ class CircularMemory
     cells.Length > 0 &&
     // Read and write can only have in-bounds indices (0 to cells.length - 1)
     0 <= read_position < cells.Length &&
-    0 <= write_position < cells.Length
+    0 <= write_position < cells.Length &&
+
+    (!isFlipped ==> write_position >= read_position) &&
+    ( isFlipped ==> write_position <= read_position)
   }
 
   // A predicate indicating no more Read available
@@ -31,7 +34,7 @@ class CircularMemory
     reads this
   {
     // This condition indicates the read pointer has read all available data and "caught up" to the writer
-    (read_position == write_position) && !isFlipped
+    read_position == write_position && !isFlipped
   }
 
   // A predicate indicating no more Write should be allowed
@@ -40,7 +43,7 @@ class CircularMemory
   {
     // This condition indicates that the write pointer is about to "lap" the reader pointer
     // and no further writing should be allowed to prevent loss of data
-    (read_position == write_position) && isFlipped
+    read_position == write_position && isFlipped
   }
 
   method Read() returns (isSuccess : bool, content : int)
@@ -49,14 +52,24 @@ class CircularMemory
     ensures  Valid()
     // When the read was successful, ensure the returned content is equal to
     // what was stored in the cell which was read
-    ensures  isSuccess ==> (content == old(cells[read_position]))
+    ensures  isSuccess ==> (content == old(cells[read_position])) &&
+                            write_position == old(write_position) &&
+                            // Ensure new position is the expected one
+                            (if old(read_position) == cells.Length - 1
+                              then
+                                read_position == 0
+                              else
+                                read_position == old(read_position) + 1)
+
     // If there is no data to read (buffer was empty), ensure the dummy value 0 was returned
     // and that the reading index remained unchanged
-    ensures !isSuccess ==> (content == 0) && (read_position == old(read_position))
+    ensures !isSuccess ==> (content == 0) &&
+                            read_position == old(read_position) &&
+                            write_position == old(write_position)
 
   {
     // The case when there is no data to read
-    if (read_position == write_position) && !isFlipped
+    if read_position == write_position && !isFlipped
     {
       isSuccess := false;
       content := 0;
@@ -87,15 +100,26 @@ class CircularMemory
     requires Valid()
     ensures  Valid()
     // Ensure the cells array itself was not reassigned by the write method
-    ensures  cells == old(cells)
+    ensures cells == old(cells)
     // When the write was successful, ensure the input value was stored
     // in the cell which was written to
-    ensures  isSuccess ==> cells[old(write_position)] == input
+    ensures  isSuccess ==> cells[old(write_position)] == input &&
+                            read_position == old(read_position) &&
+                            // Ensure new position is the expected one
+                            (if old(write_position) == cells.Length - 1
+                              then
+                                write_position == 0
+                              else
+                                write_position == old(write_position) + 1)
+
     // If the write failed (the buffer was full), ensure the write index remained unchanged
-    ensures !isSuccess ==> write_position == old(write_position)
+    ensures !isSuccess ==> write_position == old(write_position) &&
+                            read_position == old(read_position)
+    // read position should never be moved by Write 
+    ensures read_position == old(read_position)
   {
     // The case when the buffer is full and writing would overwrite existing data
-    if (read_position == write_position) && isFlipped
+    if read_position == write_position && isFlipped
     {
       isSuccess := false;
     }
