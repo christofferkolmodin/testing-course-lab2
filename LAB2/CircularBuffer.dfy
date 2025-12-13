@@ -113,8 +113,7 @@ class CircularMemory
                                 write_position == old(write_position) + 1)
 
     // If the write failed (the buffer was full), ensure the write index remained unchanged
-    ensures !isSuccess ==> write_position == old(write_position) &&
-                            read_position == old(read_position)
+    ensures !isSuccess ==> write_position == old(write_position)
     // read position should never be moved by Write 
     ensures read_position == old(read_position)
   {
