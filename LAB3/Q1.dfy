@@ -8,6 +8,7 @@ Question 1a:
     and a and b will be assigned the same value, which breaks the postcondition.
 */
 
+
 method M(x : int, y : int) returns (a : int, b : int) 
   ensures a > b
 {
