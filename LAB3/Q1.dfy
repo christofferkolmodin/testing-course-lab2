@@ -9,13 +9,43 @@ Question 1a:
 */
 
 
-method M(x : int, y : int) returns (a : int, b : int) 
+method M1(x : int, y : int) returns (a : int, b : int) 
+  ensures a >= b
+{
+  if (x > y) {
+    a := x;
+    b := y;
+  } else {
+    a := y; 
+    b := x;
+  }
+}
+
+method M2(x : int, y : int) returns (a : int, b : int)
+  requires x != y 
   ensures a > b
 {
-  if (x > y)
-   {a:= x;
-    b := y;}
-  else
-   {a := y; 
-    b := x;}
+  if (x > y) {
+    a := x;
+    b := y;
+  } else {
+    a := y; 
+    b := x;
+  }
+}
+
+method M3(x : int, y : int) returns (a : int, b : int)
+  ensures a > b
+{
+  if (x > y) {
+    a := x;
+    b := y;
+  } else if (x < y) {
+    a := y; 
+    b := x;
+    // The case when x == y
+  } else {        
+    a := x + 1;
+    b := y;
+  }
 }
