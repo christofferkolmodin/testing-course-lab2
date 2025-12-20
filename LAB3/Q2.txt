@@ -1,0 +1,255 @@
+
+Partial correctness:
+
+Let:
+    Q: n > 0
+
+    R: res == fact(n)
+
+    I: (res == fact(i - 1)) ∧ (2 <= i <= n + 1)
+
+    B: i <= n
+
+    initial values = 
+    init: res := 1; i := 2
+
+    body: res := res * i; i := i + 1
+
+The goal is to show that:
+
+    Q -> wp(init, I)
+
+
+Sequence rule:
+
+    wp(res := 1; i := 2, I) = wp(res := 1, wp(i := 2, I))
+
+Inner wp:
+
+    wp(i := 2, I)
+
+    Assignment rule:
+    (replace all occurrences of i with 2 (in I))
+
+    I:    (res == fact(2 - 1)) ∧ (2 <= 2 <= n + 1) = 
+
+        = (res == fact(1))     ∧ (2 <= 2) ∧ (2 <= n + 1)
+        = (res == fact(1))     ∧ true ∧ (2 <= n + 1)
+        = (res == fact(1))     ∧ (2 <= n + 1)
+        = (res == 1)           ∧ (n >= 1)
+
+    So, 
+    wp(i := 2, I) = (res == 1) ∧ (n >= 1)
+
+
+Plug new inner wp into outer wp:
+
+      wp(res := 1, wp(i := 2, I)) =
+
+    = wp(res := 1, (res == 1) ∧ (n >= 1))
+
+    Assignment rule:
+    (replace all occurences of res with 1)
+
+        wp(res := 1, (res == 1) ∧ (n >= 1)) =
+        
+        = (1 == 1) ∧ (n >= 1)
+        = n >= 1
+
+So,
+
+wp(res := 1; i := 2, I) = (n >= 1)
+
+
+To show that the precondition Q implies (n >= 1):
+
+Q: n > 0, which trivially implies that n >= 1, so the invariant holds
+
+Therefore, Q -> wp(res := 1; i := 2, I)
+
+
+-----------------------------------------------------------------------------------------------------
+
+
+The next goal is to show (I ∧ B) -> wp(body, I)
+
+body: res := res * i; i := i + 1
+
+I: (res == fact(i - 1)) ∧ (2 <= i <= n + 1)
+
+Using sequence rule:
+
+    wp(res := res * i; i := i + 1, I) = wp(res := res*i, wp(i := i+1, I))
+
+
+Inner wp:
+      wp(i := i+1, (res == fact(i - 1)) ∧ (2 <= i <= n + 1))
+
+      Assignment rule:
+      (replace all occurences of i with i+1)
+
+       = (res == fact((i+1) - 1) ∧ (2 <= i+1 <= n+1))
+
+       = (res == fact(i)         ∧ (1 <= i) ∧ (i <= n))
+
+       So, wp(i := i+1, (res == fact(i - 1)) ∧ (2 <= i <= n + 1)) =
+
+           = (res == fact(i) ∧ (1 <= i) ∧ (i <= n))
+
+    
+Outer wp:
+    
+      wp(res := res*i, wp(i := i+1, I)) =
+
+    = wp(res := res*i, ((res == fact(i)) ∧ (1 <= i) ∧ (i <= n)))
+
+    Assignment rule:
+    (replace all occurences of res with res*i)
+
+    = (res*i == fact(i) ∧ (1 <= i) ∧ (i <= n))
+
+    So, wp(res := res*i, ((res == fact(i)) ∧ (1 <= i) ∧ (i <= n))) =
+
+    = (res*i == fact(i)) ∧ (1 <= i) ∧ (i <= n)
+
+
+    So,
+
+    wp(body, I) = (res*i == fact(i)) ∧ (1 <= i) ∧ (i <= n)
+
+
+---------------------------------------------------------------------------------------------------------
+
+The final step is to show that:
+
+I ∧ B -> (res*i == fact(i)) ∧ (1 <= i) ∧ (i <= n)
+
+Since B is (i <= n), the third statement (i <= n) holds
+
+Since I is (res == fact(i - 1)) ∧ (2 <= i <= n + 1),
+
+    from that we have that 2 <= i,
+
+    so the second statement (1 <= i) holds, knowing that (2 <= i)
+
+
+So what remains to show is that:
+
+    (res*i == fact(i))
+
+    From I we have:
+        (res == fact(i - 1))
+
+    So,
+
+      res*i = fact(i - 1) * i
+    = i * fact(i - 1)
+
+    Since a property of the factorial is that: fact(i) = i * fact(i-1), for i > 1,
+
+    And since we from that invariant have: 2 <= i,
+    we know that i > 1, so the property of the factorial is applicable
+
+    So i * fact(i - 1) can be simplified to fact(i)
+
+    So (res*i == fact(i)) also holds.
+
+-------------------------------------------------------------------------------------------------------------
+
+
+To show that the guard implies the postcondition:
+
+e.g. (I ∧ ¬B) -> R
+
+¬B is ¬(i <= n), which can be simplified to i > n
+
+
+From our I: (res == fact(i - 1)) ∧ (2 <= i <= n + 1), 
+
+    we have that i <= n+1,
+
+    So we have:
+     i > n
+     i <= n+1
+
+    E.g. i = n+1
+
+    Plugging in i = n+1 into (res == fact(i - 1))
+
+    = (res == fact(n+1 - 1))
+
+    = (res == fact(n))
+
+    Since R: (res == fact(n)),
+
+    This means that (I ∧ ¬B) -> R,
+
+        proving partial correctness
+
+
+-------------------------------------------------------------------------
+
+Total correctness:
+
+For total correctness we need partial correctness together with termination proof
+
+
+We have our loop variant
+
+V: n - i + 1
+
+We want to show that:
+
+    (1) the variant is always non-negative when the loop is entered
+    (impying there is a base case)
+
+    and (2) that the variant always decreases each iteration
+    (guaranteeing eventual termination)
+
+
+    (1)
+
+    Since B: i <= n
+
+    This can be rewritten to:
+    n - i >= 0
+
+    So,
+
+    V = n - i + 1 >= 1
+
+    Showing the variant is bounded from below by 1 while the loop runs
+
+
+---------------------------------------------
+
+    (2)
+
+    Before the loop's body we have the loop variant:
+
+    V = n - i + 1
+
+    i becomes i + 1 after the body,
+    so the variant which represents the state of the next iteration is:
+
+    V2 = n - (i+1) + 1 = n - i
+
+    So,
+
+    V2 = V - 1
+
+    Which shows that the variant always decreases by 1.
+
+    Since we have already showed that we have a basecase at 0,
+
+    from this we get total correctness.
+
+    
+
+
+
+
+
+
+
+
